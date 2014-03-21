@@ -39,32 +39,36 @@ class SQLObject < MassObject
   end
 
   def self.find(id)
-    DBConnection.execute(<<-SQL, :id => id)
-    SELECT
-    *
-    FROM
-    #{@table_name}
-    WHERE
-    id = :id
-    SQL
+      DBConnection.execute(<<-SQL, :id => id)
+      SELECT
+      *
+      FROM
+      #{@table_name}
+      WHERE
+      id = :id
+      SQL
+
   end
 
   def attributes
     @attributes ||= {}
   end
 
+  def attribute_values
+    @attributes.values
+  end
+
   def insert
-    col_names = attributes.keys.join(", ")
-    col_values = attributes.values
+    col_names = attributes.keys
     question_marks = ["?"] * col_names.count
 
-    DBConnection.execute(<<-SQL, *col_values)
+    DBConnection.execute(<<-SQL, attribute_values)
     INSERT INTO
-      #{@table_name} (#{col_names})
+      #{@table_name} (#{col_names.join(", ")})
     VALUES
-      #{question_marks}
+      (#{question_marks.join(", ")})
     SQL
-      # last_insert_row_id
+    self.id = db.last_insert_row_id
   end
 
   def initialize(params = {})
