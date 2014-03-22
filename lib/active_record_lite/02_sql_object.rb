@@ -30,24 +30,24 @@ class SQLObject < MassObject
 
   def self.all
     result_hashes = DBConnection.execute(<<-SQL)
-                 SELECT
-                   *
-                 FROM
-                   #{@table_name}
-                 SQL
+                      SELECT
+                        *
+                      FROM
+                       #{@table_name}
+                       SQL
     self.parse_all(result_hashes)
   end
 
   def self.find(id)
-      DBConnection.execute(<<-SQL, :id => id)
-      SELECT
-      *
-      FROM
-      #{@table_name}
-      WHERE
-      id = :id
-      SQL
-
+    result_hash = DBConnection.execute(<<-SQL, :id => id)
+                    SELECT
+                      *
+                    FROM
+                      #{@table_name}
+                    WHERE
+                      id = :id
+                    SQL
+    self.new(result_hash.first)
   end
 
   def attributes
@@ -62,36 +62,50 @@ class SQLObject < MassObject
     col_names = attributes.keys
     question_marks = ["?"] * col_names.count
 
-    DBConnection.execute(<<-SQL, attribute_values)
-    INSERT INTO
-      #{@table_name} (#{col_names.join(", ")})
-    VALUES
-      (#{question_marks.join(", ")})
-    SQL
-    self.id = db.last_insert_row_id
+    DBConnection.execute(<<-SQL, *attribute_values)
+      INSERT INTO
+        #{self.class.table_name} (#{col_names.join(", ")})
+      VALUES
+        (#{question_marks.join(", ")})
+      SQL
+    self.id = DBConnection.last_insert_row_id
   end
 
   def initialize(params = {})
-    params.keys.each do |attr_name|
+    params.each_pair do |attr_name, value|
       unless self.class.columns.include?(attr_name.to_sym)
-        p self.class.columns
-        p attr_name
         raise "unknown attribute #{attr_name.to_s}"
       end
+      attributes[attr_name] = value
     end
 
     super(params)
   end
 
   def save
-    # ...
+    id.nil? ? insert : update
   end
 
   def update
-    # ...
+    col_names = attributes.keys
+    updated_values = []
+    col_names.each do |attr_name|
+      updated_values << self.send(attr_name)
+    end
+    set_line = col_names.map{|attr_name| "#{attr_name} = ?"}.join(", ")
+
+    DBConnection.execute(<<-SQL, *updated_values, id)
+      UPDATE
+        #{self.class.table_name}
+      SET
+        #{set_line}
+      WHERE
+        id = ?
+    SQL
+
   end
 
-  def attribute_values
-    # ...
-  end
+  # def attribute_values
+#     this troll method at the very bottom... psy
+#   end
 end
