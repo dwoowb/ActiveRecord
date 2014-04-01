@@ -39,13 +39,13 @@ class SQLObject < MassObject
   end
 
   def self.find(id)
-    result_hash = DBConnection.execute(<<-SQL, :id => id)
+    result_hash = DBConnection.execute(<<-SQL, id)
                     SELECT
                       *
                     FROM
-                      #{@table_name}
+                      #{self.table_name}
                     WHERE
-                      id = :id
+                      id = ?
                     SQL
     self.new(result_hash.first)
   end
