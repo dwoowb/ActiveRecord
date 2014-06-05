@@ -9,7 +9,6 @@ module Searchable
     params.keys.each do |attr_name|
       where_line << "#{attr_name} = ?"
     end
-    # debugger
     hash_results = DBConnection.execute(<<-SQL, *values)
                     SELECT
                       *

@@ -105,7 +105,4 @@ class SQLObject < MassObject
 
   end
 
-  # def attribute_values
-#     this troll method at the very bottom... psy
-#   end
 end

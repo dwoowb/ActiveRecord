@@ -1,11 +1,10 @@
-# deprecated for Rails 4
 require_relative '00_attr_accessor_object.rb'
 
 class MassObject < AttrAccessorObject
 
   def self.attributes
     if self == MassObject
-      raise "must not call #attributes on MassObject directly"
+      raise "should not call #attributes on MassObject directly"
     else
       []
     end
